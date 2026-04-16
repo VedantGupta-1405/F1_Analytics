@@ -52,9 +52,19 @@ public class AnalyticsController {
         return analyticsService.getDriverScores(raceId);
     }
 
-    // 🔥 DECISION ENGINE (NEW)
+    // ✅ Decision
     @GetMapping("/decision/{raceId}")
     public DecisionDTO getDecision(@PathVariable Integer raceId) {
         return analyticsService.getBestDriverDecision(raceId);
+    }
+
+    // 🔥 DRIVER COMPARISON (NEW)
+    @GetMapping("/compare")
+    public DriverComparisonDTO compareDrivers(
+            @RequestParam String driver1,
+            @RequestParam String driver2,
+            @RequestParam Integer raceId) {
+
+        return analyticsService.compareDrivers(driver1, driver2, raceId);
     }
 }

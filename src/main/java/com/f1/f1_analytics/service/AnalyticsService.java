@@ -136,7 +136,7 @@ public class AnalyticsService {
                 .toList();
     }
 
-    // 🔥 DECISION ENGINE (NEW)
+    // 🔥 DECISION ENGINE
     public DecisionDTO getBestDriverDecision(Integer raceId) {
 
         List<DriverScoreDTO> scores = getDriverScores(raceId);
@@ -147,18 +147,66 @@ public class AnalyticsService {
 
         DriverScoreDTO top = scores.get(0);
 
-        String reason = "Balanced performance";
+        List<PaceComparisonDTO> pace = getPaceComparison(raceId);
+        List<ConsistencyDTO> consistency = getConsistency(raceId);
+        List<FastestLapDTO> fastest = getFastestLaps(raceId);
 
-        if (top.getScore() > 0.9) {
-            reason = "Dominant performance across all metrics";
-        } else if (top.getScore() > 0.8) {
-            reason = "Strong pace and consistency";
-        }
+        Map<String, Double> paceMap = pace.stream()
+                .collect(Collectors.toMap(PaceComparisonDTO::getDriverName, PaceComparisonDTO::getAvgLapTime));
+
+        Map<String, Double> consistencyMap = consistency.stream()
+                .collect(Collectors.toMap(ConsistencyDTO::getDriverName, ConsistencyDTO::getConsistency));
+
+        Map<String, Double> fastMap = fastest.stream()
+                .collect(Collectors.toMap(FastestLapDTO::getDriverName, FastestLapDTO::getFastestLap));
+
+        String driver = top.getDriverName();
+
+        double paceVal = paceMap.getOrDefault(driver, 0.0);
+        double consistencyVal = consistencyMap.getOrDefault(driver, 0.0);
+        double fastVal = fastMap.getOrDefault(driver, 0.0);
+
+        String reason = String.format(
+                "Best pace (%.2fs avg), fastest lap (%.2fs), and strong consistency (%.2f)",
+                paceVal,
+                fastVal,
+                consistencyVal
+        );
 
         return new DecisionDTO(
-                top.getDriverName(),
+                driver,
                 top.getScore(),
                 reason
+        );
+    }
+
+    // 🔥 DRIVER COMPARISON
+    public DriverComparisonDTO compareDrivers(String driver1, String driver2, Integer raceId) {
+
+        List<DriverScoreDTO> scores = getDriverScores(raceId);
+
+        Map<String, Double> scoreMap = scores.stream()
+                .collect(Collectors.toMap(DriverScoreDTO::getDriverName, DriverScoreDTO::getScore));
+
+        double score1 = scoreMap.getOrDefault(driver1, 0.0);
+        double score2 = scoreMap.getOrDefault(driver2, 0.0);
+
+        String winner;
+
+        if (score1 > score2) {
+            winner = driver1;
+        } else if (score2 > score1) {
+            winner = driver2;
+        } else {
+            winner = "Tie";
+        }
+
+        return new DriverComparisonDTO(
+                driver1,
+                score1,
+                driver2,
+                score2,
+                winner
         );
     }
 
