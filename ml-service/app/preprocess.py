@@ -20,14 +20,8 @@ def load_training_data():
 
     df = fetch_data(query)
 
-    # =========================
-    # TARGET
-    # =========================
     df['target'] = df['finish_position'].apply(lambda x: 1 if x <= 3 else 0)
 
-    # =========================
-    # FEATURE 1 — Avg Finish (last 5 races)
-    # =========================
     df['avg_finish_last_5'] = (
         df.groupby('driver_id')['finish_position']
         .rolling(5, min_periods=1)
@@ -36,9 +30,6 @@ def load_training_data():
         .reset_index(level=0, drop=True)
     )
 
-    # =========================
-    # FEATURE 2 — Avg Points (last 5 races)
-    # =========================
     df['avg_points_last_5'] = (
         df.groupby('driver_id')['points']
         .rolling(5, min_periods=1)
@@ -47,30 +38,34 @@ def load_training_data():
         .reset_index(level=0, drop=True)
     )
 
-    # =========================
-    # FEATURE 3 — Total Wins
-    # =========================
     df['win'] = (df['finish_position'] == 1).astype(int)
     df['total_wins'] = df.groupby('driver_id')['win'].cumsum().shift(1)
 
-    # =========================
-    # FEATURE 4 — Total Podiums
-    # =========================
     df['podium'] = (df['finish_position'] <= 3).astype(int)
     df['total_podiums'] = df.groupby('driver_id')['podium'].cumsum().shift(1)
 
-    # =========================
-    # CLEANUP
-    # =========================
     df.fillna(0, inplace=True)
 
     return df
 
 
 # =========================================
-# PREDICTION FEATURE BUILDER (CRITICAL)
+# PREDICTION FEATURE BUILDER (FIXED)
 # =========================================
 def build_features_for_prediction(driver_id, race_id):
+
+    # STEP 1 — get race date
+    race_query = f"""
+    SELECT race_date FROM races WHERE id = {race_id}
+    """
+    race_df = fetch_data(race_query)
+
+    if race_df.empty:
+        return None
+
+    race_date = race_df.iloc[0]["race_date"]
+
+    # STEP 2 — get ONLY past data
     query = f"""
     SELECT 
         r.driver_id,
@@ -81,6 +76,7 @@ def build_features_for_prediction(driver_id, race_id):
     FROM results r
     JOIN races ra ON r.race_id = ra.id
     WHERE r.driver_id = {driver_id}
+      AND ra.race_date < '{race_date}'
     ORDER BY ra.race_date
     """
 
@@ -89,9 +85,7 @@ def build_features_for_prediction(driver_id, race_id):
     if df.empty:
         return None
 
-    # =========================
-    # SAME FEATURE LOGIC (NO SHIFT)
-    # =========================
+    # STEP 3 — feature engineering
     df['avg_finish_last_5'] = (
         df['finish_position']
         .rolling(5, min_periods=1)
@@ -110,9 +104,7 @@ def build_features_for_prediction(driver_id, race_id):
     df['podium'] = (df['finish_position'] <= 3).astype(int)
     df['total_podiums'] = df['podium'].cumsum()
 
-    # =========================
-    # TAKE LATEST ROW (CURRENT FORM)
-    # =========================
+    # STEP 4 — latest row
     latest = df.iloc[-1]
 
     return {
