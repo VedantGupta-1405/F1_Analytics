@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class TopDriverDTO {
-
+public class LapTimeTrendDTO {
     private String driverName;
-    private Long wins;
+    private Double avgLapTime;
 }

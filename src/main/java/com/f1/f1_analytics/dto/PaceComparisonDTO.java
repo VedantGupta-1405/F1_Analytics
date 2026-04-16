@@ -5,10 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class TopDriverDTO {
-
+@AllArgsConstructor
+public class PaceComparisonDTO {
     private String driverName;
-    private Long wins;
+    private Double avgLapTime;
 }
