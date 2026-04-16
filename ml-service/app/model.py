@@ -15,7 +15,8 @@ def train_model():
         'avg_finish_last_5',
         'avg_points_last_5',
         'total_wins',
-        'total_podiums'
+        'total_podiums',
+        'constructor_points_last_5'  # ✅ ADDED
     ]
 
     X = df[features]

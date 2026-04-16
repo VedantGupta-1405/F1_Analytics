@@ -5,6 +5,7 @@ import com.f1.f1_analytics.service.AnalyticsService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map; // ✅ ADDED
 
 @RestController
 @RequestMapping("/analytics")
@@ -58,7 +59,7 @@ public class AnalyticsController {
         return analyticsService.getBestDriverDecision(raceId);
     }
 
-    // 🔥 DRIVER COMPARISON (NEW)
+    // 🔥 DRIVER COMPARISON
     @GetMapping("/compare")
     public DriverComparisonDTO compareDrivers(
             @RequestParam String driver1,
@@ -66,5 +67,14 @@ public class AnalyticsController {
             @RequestParam Integer raceId) {
 
         return analyticsService.compareDrivers(driver1, driver2, raceId);
+    }
+
+    // 🔥 NEW — ML PREDICTION ENDPOINT
+    @GetMapping("/prediction")
+    public Map<String, Object> getPrediction(
+            @RequestParam Integer driverId,
+            @RequestParam Integer raceId) {
+
+        return analyticsService.getPrediction(driverId, raceId);
     }
 }

@@ -4,6 +4,7 @@ import com.f1.f1_analytics.dto.*;
 import com.f1.f1_analytics.repository.LapTimeRepository;
 import com.f1.f1_analytics.repository.PitStopRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -14,13 +15,14 @@ public class AnalyticsService {
     private final LapTimeRepository lapTimeRepository;
     private final PitStopRepository pitStopRepository;
 
+    private final String ML_URL = "http://127.0.0.1:8000/predict";
+
     public AnalyticsService(LapTimeRepository lapTimeRepository,
                             PitStopRepository pitStopRepository) {
         this.lapTimeRepository = lapTimeRepository;
         this.pitStopRepository = pitStopRepository;
     }
 
-    // ✅ Lap Time Trends
     public List<LapTimeTrendDTO> getLapTimeTrends(Integer raceId) {
         return lapTimeRepository.getLapTimeTrends(raceId)
                 .stream()
@@ -31,7 +33,6 @@ public class AnalyticsService {
                 .toList();
     }
 
-    // ✅ Pit Stop Impact
     public List<PitStopImpactDTO> getPitStopImpact(Integer raceId) {
         return pitStopRepository.getPitStopImpact(raceId)
                 .stream()
@@ -42,7 +43,6 @@ public class AnalyticsService {
                 .toList();
     }
 
-    // ✅ Pace Comparison
     public List<PaceComparisonDTO> getPaceComparison(Integer raceId) {
         return lapTimeRepository.getPaceComparison(raceId)
                 .stream()
@@ -53,7 +53,6 @@ public class AnalyticsService {
                 .toList();
     }
 
-    // ✅ Fastest Lap
     public List<FastestLapDTO> getFastestLaps(Integer raceId) {
         return lapTimeRepository.getFastestLaps(raceId)
                 .stream()
@@ -64,7 +63,6 @@ public class AnalyticsService {
                 .toList();
     }
 
-    // ✅ Consistency
     public List<ConsistencyDTO> getConsistency(Integer raceId) {
         return lapTimeRepository.getConsistency(raceId)
                 .stream()
@@ -75,7 +73,23 @@ public class AnalyticsService {
                 .toList();
     }
 
-    // 🔥 DRIVER SCORE ENGINE
+    // 🔥 FIXED ML CALL (ONLY CHANGE HERE)
+    public Map<String, Object> getPrediction(Integer driverId, Integer raceId) {
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        String url = ML_URL + "?driver_id=" + driverId + "&race_id=" + raceId;
+
+        try {
+            return restTemplate.postForObject(url, "", Map.class);
+        } catch (Exception e) {
+            return Map.of(
+                    "error", "ML service unavailable",
+                    "details", e.getMessage()
+            );
+        }
+    }
+
     public List<DriverScoreDTO> getDriverScores(Integer raceId) {
 
         List<PaceComparisonDTO> pace = getPaceComparison(raceId);
@@ -136,7 +150,6 @@ public class AnalyticsService {
                 .toList();
     }
 
-    // 🔥 DECISION ENGINE
     public DecisionDTO getBestDriverDecision(Integer raceId) {
 
         List<DriverScoreDTO> scores = getDriverScores(raceId);
@@ -180,7 +193,6 @@ public class AnalyticsService {
         );
     }
 
-    // 🔥 DRIVER COMPARISON
     public DriverComparisonDTO compareDrivers(String driver1, String driver2, Integer raceId) {
 
         List<DriverScoreDTO> scores = getDriverScores(raceId);
@@ -210,7 +222,6 @@ public class AnalyticsService {
         );
     }
 
-    // 🔥 NORMALIZATION FUNCTION
     private double normalizeInverse(double value, double min, double max) {
         if (max - min == 0) return 1.0;
         return (max - value) / (max - min);

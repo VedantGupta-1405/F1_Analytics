@@ -8,6 +8,7 @@ def load_training_data():
     query = """
     SELECT 
         r.driver_id,
+        r.constructor_id,
         r.race_id,
         r.grid_position,
         r.finish_position,
@@ -15,7 +16,7 @@ def load_training_data():
         ra.race_date
     FROM results r
     JOIN races ra ON r.race_id = ra.id
-    ORDER BY r.driver_id, ra.race_date
+    ORDER BY ra.race_date, r.constructor_id, r.driver_id
     """
 
     df = fetch_data(query)
@@ -44,6 +45,33 @@ def load_training_data():
     df['podium'] = (df['finish_position'] <= 3).astype(int)
     df['total_podiums'] = df.groupby('driver_id')['podium'].cumsum().shift(1)
 
+    # =========================
+    # 🔥 FIXED — TRUE CONSTRUCTOR PERFORMANCE
+    # =========================
+    # Step 1: aggregate team performance per race
+    constructor_race = (
+        df.groupby(['constructor_id', 'race_id', 'race_date'])['points']
+        .sum()
+        .reset_index()
+        .sort_values(['constructor_id', 'race_date'])
+    )
+
+    # Step 2: rolling performance (last 5 races per team)
+    constructor_race['constructor_points_last_5'] = (
+        constructor_race.groupby('constructor_id')['points']
+        .rolling(5, min_periods=1)
+        .mean()
+        .shift(1)
+        .reset_index(level=0, drop=True)
+    )
+
+    # Step 3: merge back to main df
+    df = df.merge(
+        constructor_race[['constructor_id', 'race_id', 'constructor_points_last_5']],
+        on=['constructor_id', 'race_id'],
+        how='left'
+    )
+
     df.fillna(0, inplace=True)
 
     return df
@@ -54,9 +82,13 @@ def load_training_data():
 # =========================================
 def build_features_for_prediction(driver_id, race_id):
 
-    # STEP 1 — get race date
+    # STEP 1 — get race date + constructor
     race_query = f"""
-    SELECT race_date FROM races WHERE id = {race_id}
+    SELECT r.race_date, res.constructor_id
+    FROM races r
+    JOIN results res ON r.id = res.race_id
+    WHERE r.id = {race_id} AND res.driver_id = {driver_id}
+    LIMIT 1
     """
     race_df = fetch_data(race_query)
 
@@ -64,9 +96,10 @@ def build_features_for_prediction(driver_id, race_id):
         return None
 
     race_date = race_df.iloc[0]["race_date"]
+    constructor_id = race_df.iloc[0]["constructor_id"]
 
-    # STEP 2 — get ONLY past data
-    query = f"""
+    # STEP 2 — driver past data
+    driver_query = f"""
     SELECT 
         r.driver_id,
         r.grid_position,
@@ -80,23 +113,14 @@ def build_features_for_prediction(driver_id, race_id):
     ORDER BY ra.race_date
     """
 
-    df = fetch_data(query)
+    df = fetch_data(driver_query)
 
     if df.empty:
         return None
 
-    # STEP 3 — feature engineering
-    df['avg_finish_last_5'] = (
-        df['finish_position']
-        .rolling(5, min_periods=1)
-        .mean()
-    )
-
-    df['avg_points_last_5'] = (
-        df['points']
-        .rolling(5, min_periods=1)
-        .mean()
-    )
+    # STEP 3 — driver features
+    df['avg_finish_last_5'] = df['finish_position'].rolling(5, min_periods=1).mean()
+    df['avg_points_last_5'] = df['points'].rolling(5, min_periods=1).mean()
 
     df['win'] = (df['finish_position'] == 1).astype(int)
     df['total_wins'] = df['win'].cumsum()
@@ -104,7 +128,35 @@ def build_features_for_prediction(driver_id, race_id):
     df['podium'] = (df['finish_position'] <= 3).astype(int)
     df['total_podiums'] = df['podium'].cumsum()
 
-    # STEP 4 — latest row
+    # =========================
+    # 🔥 FIXED — TEAM PERFORMANCE (REAL)
+    # =========================
+    constructor_query = f"""
+    SELECT 
+        r.race_id,
+        SUM(r.points) as team_points,
+        ra.race_date
+    FROM results r
+    JOIN races ra ON r.race_id = ra.id
+    WHERE r.constructor_id = {constructor_id}
+      AND ra.race_date < '{race_date}'
+    GROUP BY r.race_id, ra.race_date
+    ORDER BY ra.race_date
+    """
+
+    cdf = fetch_data(constructor_query)
+
+    if cdf.empty:
+        constructor_perf = 0
+    else:
+        cdf['constructor_points_last_5'] = (
+            cdf['team_points']
+            .rolling(5, min_periods=1)
+            .mean()
+        )
+        constructor_perf = cdf.iloc[-1]['constructor_points_last_5']
+
+    # STEP 4 — latest driver row
     latest = df.iloc[-1]
 
     return {
@@ -112,5 +164,6 @@ def build_features_for_prediction(driver_id, race_id):
         "avg_finish_last_5": float(latest["avg_finish_last_5"]),
         "avg_points_last_5": float(latest["avg_points_last_5"]),
         "total_wins": int(latest["total_wins"]),
-        "total_podiums": int(latest["total_podiums"])
+        "total_podiums": int(latest["total_podiums"]),
+        "constructor_points_last_5": float(constructor_perf)
     }
