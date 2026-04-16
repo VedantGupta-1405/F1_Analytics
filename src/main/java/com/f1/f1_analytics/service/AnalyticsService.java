@@ -75,7 +75,7 @@ public class AnalyticsService {
                 .toList();
     }
 
-    // 🔥 DRIVER SCORE ENGINE (FINAL)
+    // 🔥 DRIVER SCORE ENGINE
     public List<DriverScoreDTO> getDriverScores(Integer raceId) {
 
         List<PaceComparisonDTO> pace = getPaceComparison(raceId);
@@ -95,7 +95,6 @@ public class AnalyticsService {
         Map<String, Double> pitMap = pit.stream()
                 .collect(Collectors.toMap(PitStopImpactDTO::getDriverName, PitStopImpactDTO::getAvgPitDuration));
 
-        // 🔥 NORMALIZATION RANGE
         double paceMin = Collections.min(paceMap.values());
         double paceMax = Collections.max(paceMap.values());
 
@@ -110,7 +109,6 @@ public class AnalyticsService {
 
         List<DriverScoreDTO> scores = new ArrayList<>();
 
-        // 🔥 FIXED LOOP (ALL DRIVERS INCLUDED)
         Set<String> drivers = new HashSet<>();
         drivers.addAll(paceMap.keySet());
         drivers.addAll(fastMap.keySet());
@@ -136,6 +134,32 @@ public class AnalyticsService {
         return scores.stream()
                 .sorted((a, b) -> Double.compare(b.getScore(), a.getScore()))
                 .toList();
+    }
+
+    // 🔥 DECISION ENGINE (NEW)
+    public DecisionDTO getBestDriverDecision(Integer raceId) {
+
+        List<DriverScoreDTO> scores = getDriverScores(raceId);
+
+        if (scores.isEmpty()) {
+            return new DecisionDTO("N/A", 0.0, "No data available");
+        }
+
+        DriverScoreDTO top = scores.get(0);
+
+        String reason = "Balanced performance";
+
+        if (top.getScore() > 0.9) {
+            reason = "Dominant performance across all metrics";
+        } else if (top.getScore() > 0.8) {
+            reason = "Strong pace and consistency";
+        }
+
+        return new DecisionDTO(
+                top.getDriverName(),
+                top.getScore(),
+                reason
+        );
     }
 
     // 🔥 NORMALIZATION FUNCTION

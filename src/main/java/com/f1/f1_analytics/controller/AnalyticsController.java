@@ -46,9 +46,15 @@ public class AnalyticsController {
         return analyticsService.getConsistency(raceId);
     }
 
-    // 🔥 DRIVER SCORE (NEW)
+    // ✅ Driver Score
     @GetMapping("/driver-score/{raceId}")
     public List<DriverScoreDTO> getDriverScores(@PathVariable Integer raceId) {
         return analyticsService.getDriverScores(raceId);
+    }
+
+    // 🔥 DECISION ENGINE (NEW)
+    @GetMapping("/decision/{raceId}")
+    public DecisionDTO getDecision(@PathVariable Integer raceId) {
+        return analyticsService.getBestDriverDecision(raceId);
     }
 }
