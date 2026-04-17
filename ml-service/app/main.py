@@ -22,8 +22,8 @@ app.include_router(api_router)
 # HEALTH CHECK
 # =========================
 @app.get("/")
-def home():
-    return {"message": "ML Service Running"}
+def root():
+    return {"status": "running"}
 
 
 # =========================
