@@ -32,40 +32,7 @@ A high-performance, dynamic Formula 1 data analytics platform designed to visual
   - Originally configured with `FastF1`, upgraded to use the ultra-fast **Jolpi API** (the modern Ergast community mirror) to fetch complete race classification matrices in under 2 seconds.
 - **Caching:** Memory and local JSON caching mechanisms (`season_{year}_cache.json`) to prevent redundant external API calls and ensure instant frontend resolution.
 - **Data Processing:** `Pandas` for structural data manipulation and extraction.
-
----
-
-## 🚀 Setup & Installation
-
-### Prerequisites
-- Python 3.9+
-- Node.js 18+
-- npm or yarn
-
-### 1. Backend Setup (FastAPI)
-Navigate to the machine-learning service directory:
-```bash
-cd ml-service
-# Install dependencies
-pip install fastapi uvicorn pandas fastf1 requests
-
-# Start the server
-uvicorn app.main:app --reload --port 8000
-```
-*The backend will be running at `http://localhost:8000`*
-
-### 2. Frontend Setup (React)
-Navigate to the frontend directory:
-```bash
-cd frontend
-# Install dependencies
-npm install
-
-# Start the development server
-npm run dev
-```
-*The frontend will be running at `http://localhost:5173`*
-
+  
 ---
 
 ## 🌍 Deployment
@@ -109,8 +76,3 @@ F1_Analytics/
     │   └── api_data.py      # Core data routers (Jolpi API, RSS News fetcher)
     └── requirements.txt
 ```
-
----
-
-## 📜 Design Philosophy
-The platform abandons generic, rounded "SaaS" dashboards in favor of a **Retro-Modern** design. By using high-contrast Ferrari reds (`#e10600`), deep blacks (`#0d0d0d`), and 8-bit typography alongside complex data visualizations, the platform feels raw, aggressive, and perfectly tailored to the high-speed nature of Formula 1.
