@@ -130,11 +130,13 @@ export default function Dashboard() {
                 const isCompleted = r.results && r.results.length > 0;
                 const winner = isCompleted ? r.results.find(res => res.finish_position === 1) : null;
                 return (
-                  <Link key={idx} to={`/race/${r.round}`} className={`clean-card p-4 transition-colors ${!isCompleted ? 'opacity-50 pointer-events-none' : 'hover:border-[#e10600]'}`}>
-                    <div className="text-[10px] text-[#707070] font-bold mb-2">RND {r.round}</div>
-                    <div className="text-xs text-white font-bold leading-tight uppercase h-8">{r.race_name}</div>
+                  <Link key={idx} to={`/race/${r.round}`} className={`clean-card p-4 flex flex-col justify-between transition-colors ${!isCompleted ? 'opacity-50 pointer-events-none' : 'hover:border-[#e10600]'}`}>
+                    <div>
+                      <div className="text-[10px] text-[#707070] font-bold mb-2">RND {r.round}</div>
+                      <div className="text-[10px] sm:text-xs text-white font-bold leading-tight uppercase line-clamp-3 mb-4">{r.race_name}</div>
+                    </div>
                     {isCompleted && winner && (
-                      <div className="mt-4 text-[10px] text-[#e10600] font-bold uppercase truncate">
+                      <div className="mt-auto text-[10px] text-[#e10600] font-bold uppercase truncate">
                         1. {winner.driver}
                       </div>
                     )}
