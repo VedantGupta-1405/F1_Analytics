@@ -43,7 +43,7 @@ export function Navbar() {
 
   useEffect(() => {
     if (searchQuery.length > 1) {
-      axios.get(`https://f1-analytics-backend.onrender.com/api/search?q=${searchQuery}&year=${season}`)
+      axios.get(`https://f1-analytics-r1v0.onrender.com/api/search?q=${searchQuery}&year=${season}`)
         .then(res => setSearchResults(res.data))
         .catch(() => setSearchResults([]));
     } else {

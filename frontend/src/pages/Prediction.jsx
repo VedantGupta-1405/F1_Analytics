@@ -14,7 +14,7 @@ export default function Prediction() {
     setLoading(true);
 
     try {
-      const response = await axios.post(`http://localhost:8000/predict?driver_id=${driverId}&race_id=${raceId}`);
+      const response = await axios.post(`https://f1-analytics-r1v0.onrender.com/predict?driver_id=${driverId}&race_id=${raceId}`);
       setResult(response.data);
     } catch (err) {
       setTimeout(() => {
