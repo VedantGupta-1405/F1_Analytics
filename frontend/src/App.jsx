@@ -29,7 +29,7 @@ function App() {
 
   useEffect(() => {
     setLoading(true);
-    axios.get(`https://your-backend-name.onrender.com/api/season/${season}`)
+    axios.get(`https://f1-analytics-backend.onrender.com/api/season/${season}`)
       .then(res => {
         setSeasonData(res.data);
         setLoading(false);

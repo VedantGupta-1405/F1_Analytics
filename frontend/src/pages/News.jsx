@@ -8,7 +8,7 @@ export default function News() {
 
   useEffect(() => {
     setLoading(true);
-    axios.get('https://your-backend-name.onrender.com/api/news')
+    axios.get('https://f1-analytics-backend.onrender.com/api/news')
       .then(res => {
         setNews(res.data);
         setLoading(false);
