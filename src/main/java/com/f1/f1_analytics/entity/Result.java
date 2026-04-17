@@ -39,4 +39,13 @@ public class Result {
     private Double points;
 
     private String status;
+
+    @Column(name = "avg_lap_time")
+    private Double avgLapTime;
+
+    @Column(name = "lap_time_std_dev")
+    private Double lapTimeStdDev;
+
+    @Column(name = "position_gain")
+    private Integer positionGain;
 }

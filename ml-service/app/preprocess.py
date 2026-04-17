@@ -13,6 +13,9 @@ def load_training_data():
         r.grid_position,
         r.finish_position,
         r.points,
+        r.avg_lap_time,
+        r.lap_time_std_dev,
+        r.position_gain,
         ra.race_date
     FROM results r
     JOIN races ra ON r.race_id = ra.id
@@ -39,16 +42,21 @@ def load_training_data():
         .reset_index(level=0, drop=True)
     )
 
+    df['avg_lap_time_last_5'] = (
+        df.groupby('driver_id')['avg_lap_time']
+        .rolling(5, min_periods=1)
+        .mean()
+        .shift(1)
+        .reset_index(level=0, drop=True)
+    )
+
     df['win'] = (df['finish_position'] == 1).astype(int)
     df['total_wins'] = df.groupby('driver_id')['win'].cumsum().shift(1)
 
     df['podium'] = (df['finish_position'] <= 3).astype(int)
     df['total_podiums'] = df.groupby('driver_id')['podium'].cumsum().shift(1)
 
-    # =========================
-    # 🔥 FIXED — TRUE CONSTRUCTOR PERFORMANCE
-    # =========================
-    # Step 1: aggregate team performance per race
+    # Constructor Performance
     constructor_race = (
         df.groupby(['constructor_id', 'race_id', 'race_date'])['points']
         .sum()
@@ -56,7 +64,6 @@ def load_training_data():
         .sort_values(['constructor_id', 'race_date'])
     )
 
-    # Step 2: rolling performance (last 5 races per team)
     constructor_race['constructor_points_last_5'] = (
         constructor_race.groupby('constructor_id')['points']
         .rolling(5, min_periods=1)
@@ -65,20 +72,20 @@ def load_training_data():
         .reset_index(level=0, drop=True)
     )
 
-    # Step 3: merge back to main df
     df = df.merge(
         constructor_race[['constructor_id', 'race_id', 'constructor_points_last_5']],
         on=['constructor_id', 'race_id'],
         how='left'
     )
 
-    df.fillna(0, inplace=True)
+    # Fill NaNs for the new columns
+    df.fillna({'avg_lap_time_last_5': 0, 'lap_time_std_dev': 0, 'position_gain': 0, 'constructor_points_last_5': 0}, inplace=True)
 
     return df
 
 
 # =========================================
-# PREDICTION FEATURE BUILDER (FIXED)
+# PREDICTION FEATURE BUILDER
 # =========================================
 def build_features_for_prediction(driver_id, race_id):
 
@@ -105,6 +112,9 @@ def build_features_for_prediction(driver_id, race_id):
         r.grid_position,
         r.finish_position,
         r.points,
+        r.avg_lap_time,
+        r.lap_time_std_dev,
+        r.position_gain,
         ra.race_date
     FROM results r
     JOIN races ra ON r.race_id = ra.id
@@ -121,6 +131,7 @@ def build_features_for_prediction(driver_id, race_id):
     # STEP 3 — driver features
     df['avg_finish_last_5'] = df['finish_position'].rolling(5, min_periods=1).mean()
     df['avg_points_last_5'] = df['points'].rolling(5, min_periods=1).mean()
+    df['avg_lap_time_last_5'] = df['avg_lap_time'].rolling(5, min_periods=1).mean()
 
     df['win'] = (df['finish_position'] == 1).astype(int)
     df['total_wins'] = df['win'].cumsum()
@@ -128,9 +139,7 @@ def build_features_for_prediction(driver_id, race_id):
     df['podium'] = (df['finish_position'] <= 3).astype(int)
     df['total_podiums'] = df['podium'].cumsum()
 
-    # =========================
-    # 🔥 FIXED — TEAM PERFORMANCE (REAL)
-    # =========================
+    # Team performance
     constructor_query = f"""
     SELECT 
         r.race_id,
@@ -161,9 +170,12 @@ def build_features_for_prediction(driver_id, race_id):
 
     return {
         "grid_position": int(latest["grid_position"]),
-        "avg_finish_last_5": float(latest["avg_finish_last_5"]),
-        "avg_points_last_5": float(latest["avg_points_last_5"]),
+        "avg_finish_last_5": float(latest["avg_finish_last_5"]) if not pd.isna(latest["avg_finish_last_5"]) else 0.0,
+        "avg_points_last_5": float(latest["avg_points_last_5"]) if not pd.isna(latest["avg_points_last_5"]) else 0.0,
+        "avg_lap_time_last_5": float(latest["avg_lap_time_last_5"]) if not pd.isna(latest["avg_lap_time_last_5"]) else 0.0,
+        "lap_time_std_dev": float(latest["lap_time_std_dev"]) if not pd.isna(latest["lap_time_std_dev"]) else 0.0,
+        "position_gain": int(latest["position_gain"]) if not pd.isna(latest["position_gain"]) else 0,
         "total_wins": int(latest["total_wins"]),
         "total_podiums": int(latest["total_podiums"]),
-        "constructor_points_last_5": float(constructor_perf)
+        "constructor_points_last_5": float(constructor_perf) if not pd.isna(constructor_perf) else 0.0
     }

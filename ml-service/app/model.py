@@ -15,6 +15,9 @@ def train_model():
         'grid_position',
         'avg_finish_last_5',
         'avg_points_last_5',
+        'avg_lap_time_last_5',
+        'lap_time_std_dev',
+        'position_gain',
         'total_wins',
         'total_podiums',
         'constructor_points_last_5'
