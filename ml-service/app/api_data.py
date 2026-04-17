@@ -101,7 +101,10 @@ def get_news():
         "https://images.unsplash.com/photo-1502744688674-c619d1586c9e?auto=format&fit=crop&q=80&w=800"
     ]
     try:
-        r = requests.get("https://www.autosport.com/rss/feed/f1", timeout=5)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+        r = requests.get("https://www.autosport.com/rss/feed/f1", headers=headers, timeout=10)
         root = ET.fromstring(r.content)
         items = root.findall('.//item')
         
