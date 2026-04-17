@@ -29,6 +29,9 @@ def train():
 def predict(driver_id: int, race_id: int):
     model = joblib.load("saved_models/model.pkl")
 
+    # Detect model type
+    model_name = type(model).__name__
+
     # Build features from DB
     features = build_features_for_prediction(driver_id, race_id)
 
@@ -39,7 +42,17 @@ def predict(driver_id: int, race_id: int):
 
     pred = model.predict(df)[0]
 
+    # =========================
+    # 🔥 PROBABILITY (NEW)
+    # =========================
+    if hasattr(model, "predict_proba"):
+        prob = model.predict_proba(df)[0][1]
+    else:
+        prob = None
+
     return {
         "prediction": int(pred),
+        "probability": float(prob) if prob is not None else None,
+        "model_used": model_name,
         "features_used": features
     }
