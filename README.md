@@ -68,6 +68,30 @@ npm run dev
 
 ---
 
+## 🌍 Deployment
+
+Because the platform relies on dynamic API fetching without a heavy Postgres database, deployment is extremely straightforward and can be hosted entirely for free.
+
+### Backend Deployment (Render / Railway)
+1. Push your code to GitHub.
+2. Create an account on [Render](https://render.com/) or [Railway](https://railway.app/).
+3. Create a new **Web Service** and connect your GitHub repository.
+4. Set the Root Directory to `ml-service`.
+5. Set the Build Command: `pip install -r requirements.txt`
+6. Set the Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+7. Once deployed, copy your new backend URL (e.g., `https://f1-backend.onrender.com`).
+
+### Frontend Deployment (Vercel / Netlify)
+1. Before deploying, update the `axios` base URLs in `frontend/src/App.jsx`, `Navbar.jsx`, and `News.jsx` from `http://localhost:8000` to your new deployed Backend URL.
+2. Push the changes to GitHub.
+3. Create an account on [Vercel](https://vercel.com/) or [Netlify](https://www.netlify.com/).
+4. Create a new project and import your GitHub repository.
+5. Set the Root Directory to `frontend`.
+6. The platform will automatically detect Vite. Leave the default build command (`npm run build`) and output directory (`dist`).
+7. Click Deploy!
+
+---
+
 ## 📂 Project Structure
 
 ```
