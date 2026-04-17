@@ -87,29 +87,29 @@ export default function RaceView() {
               className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity duration-700"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-[#0d0d0d]/80 to-transparent"></div>
-            <div className="absolute bottom-10 left-10">
-              <h1 className="text-4xl md:text-6xl text-white pixel-font mb-4 leading-tight uppercase">
+            <div className="absolute bottom-6 left-6 right-6 md:bottom-10 md:left-10 md:right-10">
+              <h1 className="text-xl sm:text-2xl md:text-6xl text-white pixel-font mb-4 leading-tight uppercase break-words">
                 {data.race_name}
               </h1>
-              <p className="text-sm text-[#e10600] font-bold uppercase tracking-widest bg-[#151515] inline-block px-4 py-2 border-2 border-[#262626]">
+              <p className="text-[10px] md:text-sm text-[#e10600] font-bold uppercase tracking-widest bg-[#151515] inline-block px-4 py-2 border-2 border-[#262626]">
                 RND_{raceId} // {data.date}
               </p>
             </div>
           </div>
 
           {/* HIGHLIGHTS */}
-          <section className="grid md:grid-cols-2 gap-12">
-            <div className="clean-card p-10">
+          <section className="grid md:grid-cols-2 gap-6 md:gap-12">
+            <div className="clean-card p-6 md:p-10">
                <p className="text-[10px] font-bold text-[#e10600] uppercase tracking-widest mb-6">[ MAX_GAINER ]</p>
                {data.gainers.length > 0 ? (
                  <div>
-                   <div className="text-3xl font-bold text-white uppercase tracking-wider">{data.gainers[0].driver}</div>
-                   <div className="text-xl text-[#707070] mt-4 font-bold tracking-widest">+{data.gainers[0].pos_gain} PLACES</div>
+                   <div className="text-2xl md:text-3xl font-bold text-white uppercase tracking-wider">{data.gainers[0].driver}</div>
+                   <div className="text-lg md:text-xl text-[#707070] mt-2 md:mt-4 font-bold tracking-widest">+{data.gainers[0].pos_gain} PLACES</div>
                  </div>
                ) : <p className="text-[#555555]">N/A</p>}
             </div>
             
-            <div className="clean-card p-10">
+            <div className="clean-card p-6 md:p-10">
                <p className="text-[10px] font-bold text-[#e10600] uppercase tracking-widest mb-6">[ MAX_DROPPER ]</p>
                {data.losers.length > 0 ? (
                  <div>
@@ -121,7 +121,7 @@ export default function RaceView() {
           </section>
 
           {/* TRACK INFO & HISTORY */}
-          <section className="clean-card p-10 space-y-8">
+          <section className="clean-card p-6 md:p-10 space-y-8">
             <h2 className="text-sm text-white pixel-font uppercase border-b-2 border-[#262626] pb-4">
               [ CIRCUIT_DATABASE ]
             </h2>
@@ -157,7 +157,7 @@ export default function RaceView() {
             <h2 className="text-sm text-white pixel-font uppercase border-b-2 border-[#262626] pb-4">
               [ GRID_VARIANCE ]
             </h2>
-            <div className="clean-card p-8 h-[400px]">
+            <div className="clean-card p-4 md:p-8 h-[400px] overflow-hidden">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.results} margin={{ top: 20, right: 10, left: -20, bottom: 40 }}>
                   <CartesianGrid strokeDasharray="2 2" vertical={false} stroke="#262626" />
